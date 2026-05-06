@@ -45,3 +45,18 @@ The goal is to provide a seamless interface where a user can enter a city name a
 - **Colour Palette**: A professional, high-contrast palette using deep blues and slate greys to ensure readability.
 - **Font**: Inter / Roboto - Used for all body text and data readouts for maximum legibility.
 - **Accessibility**: All images/icons include descriptive alt text or ARIA labels. Semantic HTML elements are used to provide clear structure.
+
+### Design Evolution
+TBD
+
+## Features
+### Search and History
+- **Global Search**: Find weather data for any city in the world using the Open Metro API.
+- **Search History**: The app saves recently searched cities to `localStorage`.
+
+### Real-Time Dashboard
+- **Dynamic Current Weather**: Displays the city name, date, weather icon, temperature, humidity, and wind speed.
+- **UV Index Indicator**: Includes a color-coded badge indicating favorable, moderate, or severe levels.
+
+## Future Development
+TBD
