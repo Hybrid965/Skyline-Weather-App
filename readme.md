@@ -19,3 +19,29 @@ The goal is to provide a seamless interface where a user can enter a city name a
 ### As an Outdoor Enthusiast
 - I want to check wind speeds and humidity levels so that I can determine if it is a good day for cycling or hiking.
 - I want to see visual icons representing the weather so that I can understand the conditions at a glance.
+
+## UX Design
+
+### Strategy Plane
+- **Target Audience**: Commuters, students, travelers, and general users seeking quick weather updates.
+- **User Needs**: Rapid data retrieval, mobile-friendly interface, and high-contrast visuals for outdoor viewing.
+- **Rationale**: The project bridges the gap between complex meteorological tools and simple widgets, providing a "middle-ground" dashboard that is both lightweight and informative.
+
+### Scope Plane
+- **Project Requirements**: A fully responsive single-page application featuring a dynamic search bar, local storage for search history, and real-time API integration.
+- **Content Requirements**: Current weather metrics (Temp, Humidity, Wind, UV Index), 5-day forecast cards, and a search history sidebar.
+- **Out of Scope**: Historical weather data, interactive radar maps, and user account creation.
+
+### Structure Plane
+- **Information Hierarchy**: The search interface is positioned prominently at the top. Current weather is the largest element, followed by a secondary grid for the 5-day forecast.
+- **Interaction Feedback**: Buttons use subtle transitions on hover. The search history updates instantly when a new city is successfully called.
+
+### Skeleton Plane
+- **Wireframes**: Initial layouts were planned to ensure that even on mobile, the most vital information remains "above the fold".
+    - 📄 [Dashboard](docs/wireframes/dashboard.png) - Features the app branding and a persistent search input.
+    - A large hero section for the current city, followed by a horizontal row of cards.
+
+### Surface Plane
+- **Colour Palette**: A professional, high-contrast palette using deep blues and slate greys to ensure readability.
+- **Font**: Inter / Roboto - Used for all body text and data readouts for maximum legibility.
+- **Accessibility**: All images/icons include descriptive alt text or ARIA labels. Semantic HTML elements are used to provide clear structure.
