@@ -5,32 +5,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather App</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 
 <body>
+    <!-- Header -->
+    <header>
+        <h1>Sky<span>line</span></h1>
+    </header>
+
     <!-- Container -->
     <div class="container">
+
         <!-- Search Bar -->
         <div class="search-bar">
             <input type="text" id="cityInput" placeholder="Search for a city...">
-            <button id="searchBtn">Search</button>
+            <button id="searchBtn">🔍</button>
         </div>
+
+        <!-- Default View -->
+        <div class="default" id="default">
+            <div class="default-icon">🌍</div>
+            <h1 class="default-title">Where in the World?</h1>
+            <p class="default-sub">Search for any city to get the current weather and forecast.</p>
+        </div>
+
         <!-- Weather Card -->
         <div class="weather-card" id="weatherCard">
-            <h1 id="cityName">Birmingham</h1>
-            <p id="condition">Partly cloudy</p>
-            <p id="temperature">14°C</p>
+            <h1 id="cityName"></h1>
+            <p id="condition"></p>
+            <p id="temperature"></p>
         </div>
+
         <!-- Stats Card -->
         <div class="stats">
             <div class="stat">
-                <p>Humidity</p>
-                <p id="humidity">72%</p>
+                <p></p>
+                <p id="humidity"></p>
             </div>
             <div class="stat">
-                <p>Wind</p>
-                <p id="wind">18 km/h</p>
+                <p></p>
+                <p id="wind"></p>
             </div>
         </div>
 
