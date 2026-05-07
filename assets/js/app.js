@@ -27,12 +27,14 @@ const weatherConditions = {
     99: { label: 'Severe thunderstorm', icon: '⛈️' }
 };
 //=====================================================================
+//Functions
+
 // Degree Function
 function getWindDirection(degrees) {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     return directions[Math.round(degrees / 45) % 8];
 }
-//=====================================================================
+
 //UV Index State Function
 function getUvState(uv) {
     if (uv <= 2) return 'Low';
@@ -40,6 +42,26 @@ function getUvState(uv) {
     if (uv <= 7) return 'High';
     if (uv <= 10) return 'Very High';
     return 'Extreme';
+}
+
+// Local Storage Function 
+function updateHistoryChips() {
+    const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+    const container = document.getElementById('lastSearched');
+    container.innerHTML = '';
+
+    history.forEach(city => {
+        const chip = document.createElement('span');
+        chip.classList.add('history-chip');
+        chip.textContent = '🕐 ' + city;
+        chip.addEventListener('click', function () {
+            input.value = city;
+            btn.click();
+        });
+        container.appendChild(chip);
+    });
+
+    container.style.display = history.length ? 'flex' : 'none';
 }
 //=====================================================================
 // Variables
@@ -84,7 +106,7 @@ btn.addEventListener("click", function () {
             // Paste the data onto the DOM
             document.getElementById('cityName').textContent = cityName;
             document.getElementById('countryName').textContent = countryName;
-            document.getElementById('temperature').textContent = Math.round(weather.current.temperature_2m) + '°C';
+            document.getElementById('temperature').innerHTML = `${Math.round(weather.current.temperature_2m)}<sup>°C</sup>`;
             document.getElementById('wind').textContent = Math.round(weather.current.windspeed_10m) + ' km/h';
             document.getElementById('humidity').textContent = Math.round(weather.current.relative_humidity_2m) + '%';
             document.getElementById('weatherIcon').textContent = weatherConditions[code].icon;
@@ -97,6 +119,18 @@ btn.addEventListener("click", function () {
             document.getElementById('pressure').textContent = Math.round(weather.current.surface_pressure) + ' hPa';
             document.getElementById('windDir').textContent = getWindDirection(weather.current.winddirection_10m);
 
+            //Local Stoage Save
+            let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            if (history.includes(cityName)) {
+                history.splice(history.indexOf(cityName), 1);
+            }
+            history.unshift(cityName);
+            if (history.length > 3) {
+                history.pop();
+            }
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+            updateHistoryChips();
+
             //Getting the time
             const now = new Date();
             const localtime = new Intl.DateTimeFormat('en-GB', {
@@ -107,6 +141,9 @@ btn.addEventListener("click", function () {
             }).format(now);
 
             document.getElementById('dateTime').textContent = localtime;
+
+            //Update the Temp
+            rawTemp = Math.round(weather.current.temperature_2m);
 
             //=====================================================================
             // Hide the default view 
@@ -140,25 +177,22 @@ btn.addEventListener("click", function () {
         </div>`;
             }
 
-            //=====================================================================
-            //Temperature toggle
-            let rawTemp = Math.round(weather.current.temperature_2m);
-
-            document.getElementById('toggleC').addEventListener('click', function () {
-                document.getElementById('temperature').innerHTML = `${rawTemp}<sup>°C</sup>`;
-                document.getElementById('toggleC').classList.add('active');
-                document.getElementById('toggleF').classList.remove('active');
-            });
-
-            document.getElementById('toggleF').addEventListener('click', function () {
-                const f = Math.round((rawTemp * 9 / 5) + 32);
-                document.getElementById('temperature').innerHTML = `${f}<sup>°F</sup>`;
-                document.getElementById('toggleF').classList.add('active');
-                document.getElementById('toggleC').classList.remove('active');
-            });
-            //======================================================================
-
         });
+});
+
+//=====================================================================
+//Temperature toggle
+document.getElementById('toggleC').addEventListener('click', function () {
+    document.getElementById('temperature').innerHTML = `${rawTemp}<sup>°C</sup>`;
+    document.getElementById('toggleC').classList.add('active');
+    document.getElementById('toggleF').classList.remove('active');
+});
+
+document.getElementById('toggleF').addEventListener('click', function () {
+    const f = Math.round((rawTemp * 9 / 5) + 32);
+    document.getElementById('temperature').innerHTML = `${f}<sup>°F</sup>`;
+    document.getElementById('toggleF').classList.add('active');
+    document.getElementById('toggleC').classList.remove('active');
 });
 //=====================================================================
 // Event Listener for Enter Key
@@ -168,3 +202,7 @@ input.addEventListener('keydown', function (e) {
     }
 });
 //=====================================================================
+// On page load get local stoage
+window.addEventListener('load', function () {
+    updateHistoryChips();
+});

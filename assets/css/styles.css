@@ -125,6 +125,18 @@ h1 span {
 /* LAST SEARCHED */
 .last-searched {
     display: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 2rem;
+}
+
+.last-searched:hover {
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.history-chip {
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     font-size: 0.78rem;
@@ -135,11 +147,9 @@ h1 span {
     padding: 5px 12px;
     cursor: pointer;
     transition: border-color 0.2s, color 0.2s;
-    margin-bottom: 2rem;
-    width: fit-content;
 }
 
-.last-searched:hover {
+.history-chip:hover {
     border-color: var(--accent);
     color: var(--text);
 }
