@@ -70,6 +70,7 @@ let input = document.getElementById("cityInput");
 let cityName = ''
 let countryName = ''
 let cityTimezone = ''
+let rawTemp = 0
 
 
 //=====================================================================
@@ -88,6 +89,23 @@ btn.addEventListener("click", function () {
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`)
         .then(res => res.json())
         .then(data => {
+            // Error Handling for invalid city
+            if (!data.results || data.results.length === 0) {
+                document.getElementById('spinner').style.display = 'none';
+                const error = document.getElementById('errorMessage');
+                error.textContent = 'City not found, please try again';
+                error.style.display = 'block';
+
+                // Hide weather UI
+                document.getElementById('weatherCard').style.display = 'none';
+                document.getElementById('stats').style.display = 'none';
+                document.getElementById('forecast').style.display = 'none';
+
+                return
+            }
+            document.getElementById('errorMessage').style.display = 'none';
+
+            // Get Data
             const { latitude, longitude, name, country, timezone } = data.results[0];
             cityName = name;
             countryName = country;
@@ -96,6 +114,7 @@ btn.addEventListener("click", function () {
             //=====================================================================
             // Return latitude, longitude, name, country, uv index from the API
             return (fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,surface_pressure,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=5&timezone=auto`))
+
         })
         .then(res => res.json())
         .then(weather => {
@@ -188,7 +207,6 @@ btn.addEventListener("click", function () {
             input.value = '';
             //Hide the spinner 
             document.getElementById('spinner').style.display = 'none';
-
         });
 });
 
