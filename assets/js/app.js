@@ -71,13 +71,18 @@ let cityName = ''
 let countryName = ''
 let cityTimezone = ''
 
+
 //=====================================================================
 // Event Listener for search button
 btn.addEventListener("click", function () {
+    
     //=====================================================================
     // Assign city variable to the input value from the user
     const city = input.value;
     input.value = '';
+    //Spinner
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('default').style.display = 'none';
     //=====================================================================
     // Fetch the API with the city variable
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`)
@@ -181,6 +186,8 @@ btn.addEventListener("click", function () {
             //=====================================================================
             // Clear search value
             input.value = '';
+            //Hide the spinner 
+            document.getElementById('spinner').style.display = 'none';
 
         });
 });
@@ -206,6 +213,7 @@ input.addEventListener('keydown', function (e) {
         btn.click();
     }
 });
+
 //=====================================================================
 // On page load get local stoage
 window.addEventListener('load', function () {
