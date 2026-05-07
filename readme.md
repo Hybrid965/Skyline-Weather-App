@@ -14,7 +14,7 @@ The goal is to provide a seamless interface where a user can enter a city name a
 
 ### As a Traveller
 - I want to search for weather in different cities globally so that I can pack appropriately for my trip.
-- I want a history of my recently searched cities so that I can quickly toggle between my home and my destination[cite: 1, 3].
+- I want a history of my recently searched cities so that I can quickly toggle between my home and my destination
 
 ### As an Outdoor Enthusiast
 - I want to check wind speeds and humidity levels so that I can determine if it is a good day for cycling or hiking.
