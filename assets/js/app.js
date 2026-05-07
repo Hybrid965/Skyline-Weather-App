@@ -77,6 +77,7 @@ btn.addEventListener("click", function () {
     //=====================================================================
     // Assign city variable to the input value from the user
     const city = input.value;
+    input.value = '';
     //=====================================================================
     // Fetch the API with the city variable
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`)
@@ -176,6 +177,10 @@ btn.addEventListener("click", function () {
             <p class="forecast-min">${min}°</p>
         </div>`;
             }
+
+            //=====================================================================
+            // Clear search value
+            input.value = '';
 
         });
 });
