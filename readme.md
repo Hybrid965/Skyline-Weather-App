@@ -60,3 +60,7 @@ TBD
 
 ## Future Development
 TBD
+
+## Credits
+Favicon:
+- https://www.flaticon.com/authors/iconixar
