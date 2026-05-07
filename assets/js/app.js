@@ -1,3 +1,4 @@
+//=====================================================================
 // Weather Condition Codes
 const weatherConditions = {
     0: { label: 'Clear sky', icon: '☀️' },
@@ -25,32 +26,35 @@ const weatherConditions = {
     96: { label: 'Thunderstorm', icon: '⛈️' },
     99: { label: 'Severe thunderstorm', icon: '⛈️' }
 };
-
+//=====================================================================
 // Degree Function
 function getWindDirection(degrees) {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     return directions[Math.round(degrees / 45) % 8];
 }
-
- //UV Index State Function
-            function getUvState(uv) {
-                if (uv <= 2) return 'Low';
-                if (uv <= 5) return 'Moderate';
-                if (uv <= 7) return 'High';
-                if (uv <= 10) return 'Very High';
-                return 'Extreme';
-            }
-
+//=====================================================================
+//UV Index State Function
+function getUvState(uv) {
+    if (uv <= 2) return 'Low';
+    if (uv <= 5) return 'Moderate';
+    if (uv <= 7) return 'High';
+    if (uv <= 10) return 'Very High';
+    return 'Extreme';
+}
+//=====================================================================
 // Variables
 const btn = document.getElementById("searchBtn");
 let input = document.getElementById("cityInput");
 let cityName = ''
 let countryName = ''
 
+//=====================================================================
 // Event Listener for search button
 btn.addEventListener("click", function () {
+    //=====================================================================
     // Assign city variable to the input value from the user
     const city = input.value;
+    //=====================================================================
     // Fetch the API with the city variable
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`)
         .then(res => res.json())
@@ -59,6 +63,7 @@ btn.addEventListener("click", function () {
             cityName = name;
             countryName = country;
 
+            //=====================================================================
             // Return latitude, longitude, name, country, uv index from the API
             return (fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,surface_pressure,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=5&timezone=auto`))
         })
@@ -67,11 +72,13 @@ btn.addEventListener("click", function () {
             console.log(weather.current)
             const code = weather.current.weathercode;
 
+            //=====================================================================
             //Unhide the Data
             document.getElementById('weatherCard').style.display = 'block';
             document.getElementById('stats').style.display = 'grid';
             document.getElementById('forecast').style.display = 'block';
 
+            //=====================================================================
             // Paste the data onto the DOM
             document.getElementById('cityName').textContent = cityName;
             document.getElementById('countryName').textContent = countryName;
@@ -86,11 +93,13 @@ btn.addEventListener("click", function () {
             document.getElementById('precipitation').textContent = weather.current.precipitation + ' mm';
             document.getElementById('visibility').textContent = (weather.current.visibility / 1000).toFixed(1) + ' km';
             document.getElementById('pressure').textContent = Math.round(weather.current.surface_pressure) + ' hPa';
-            document.getElementById('windDirection').textContent = getWindDirection(weather.current.winddirection_10m);
+            document.getElementById('windDir').textContent = getWindDirection(weather.current.winddirection_10m);
 
+            //=====================================================================
             // Hide the default view 
             document.getElementById('default').style.display = "none";
 
+            //=====================================================================
             //5 Day Forecast
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const forecastGrid = document.getElementById('forecastGrid');
@@ -118,11 +127,31 @@ btn.addEventListener("click", function () {
         </div>`;
             }
 
+            //=====================================================================
+            //Temperature toggle
+            let rawTemp = Math.round(weather.current.temperature_2m);
+
+            document.getElementById('toggleC').addEventListener('click', function () {
+                document.getElementById('temperature').innerHTML = `${rawTemp}<sup>°C</sup>`;
+                document.getElementById('toggleC').classList.add('active');
+                document.getElementById('toggleF').classList.remove('active');
+            });
+
+            document.getElementById('toggleF').addEventListener('click', function () {
+                const f = Math.round((rawTemp * 9 / 5) + 32);
+                document.getElementById('temperature').innerHTML = `${f}<sup>°F</sup>`;
+                document.getElementById('toggleF').classList.add('active');
+                document.getElementById('toggleC').classList.remove('active');
+            });
+            //======================================================================
+
         });
 });
+//=====================================================================
 // Event Listener for Enter Key
 input.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
         btn.click();
     }
 });
+//=====================================================================
