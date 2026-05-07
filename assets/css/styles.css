@@ -157,7 +157,7 @@ h1 span {
 .error-message{
     color: #ff4d4d;
     text-align: center;
-    margin-top: 10px;
+    margin: 10px 0px 20px 0px;
     font-size: 14px;
     display: none;
 }
