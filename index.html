@@ -1,103 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-
+ 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App</title>
+    <title>Skyline Weather</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
-
+ 
 <body>
+ 
     <!-- Header -->
     <header>
         <h1>Sky<span>line</span></h1>
     </header>
-
+ 
     <!-- Container -->
     <div class="container">
-
+ 
         <!-- Search Bar -->
         <div class="search-bar">
-            <input type="text" id="cityInput" placeholder="Search for a city...">
+            <input type="text" id="cityInput" placeholder="Search for a city..." autocomplete="off">
             <button id="searchBtn">🔍</button>
         </div>
-
+ 
+        <!-- Last Searched -->
+        <div class="last-searched" id="lastSearched">
+            🕐 Last searched: <strong id="lastCity"></strong>
+        </div>
+ 
         <!-- Default View -->
         <div class="default" id="default">
             <div class="default-icon">🌍</div>
-            <h1 class="default-title">Where in the World?</h1>
+            <h1>Where in the World?</h1>
             <p class="default-sub">Search for any city to get the current weather and forecast.</p>
         </div>
-
+ 
         <!-- Weather Card -->
         <div class="weather-card" id="weatherCard">
-            <h1 id="cityName"></h1>
-            <p id="countryName"></p>
-            <div class="condition-row">
-                <span id="weatherIcon"></span>
-                <p id="condition"></p>
+            <div class="card-top">
+                <div class="location-block">
+                    <p id="countryName"></p>
+                    <p id="cityName"></p>
+                </div>
+                <div class="temp-block">
+                    <span id="weatherIcon"></span>
+                    <p id="temperature"></p>
+                    <div class="unit-toggle">
+                        <span class="unit active" id="toggleC">°C</span>
+                        <span class="unit-divider">|</span>
+                        <span class="unit" id="toggleF">°F</span>
+                    </div>
+                </div>
             </div>
-            <p id="temperature"></p>
+            <div class="card-bottom">
+                <div class="condition-row" id="condition"></div>
+                <div class="high-low" id="highLow"></div>
+            </div>
         </div>
-
+ 
         <!-- 5 Day Forecast -->
         <div class="forecast" id="forecast">
+            <div class="forecast-label">5-day forecast</div>
             <div class="forecast-grid" id="forecastGrid"></div>
         </div>
-
-        <!-- Stats Card -->
-        <!-- Humidity -->
+ 
+        <!-- Stats -->
         <div class="stats" id="stats">
             <div class="stat" id="stat-humidity">
                 <p>Humidity</p>
                 <p id="humidity"></p>
             </div>
-            <!-- Wind -->
             <div class="stat" id="stat-wind">
                 <p>Wind</p>
                 <p id="wind"></p>
+                <p id="windDir"></p>
             </div>
-            <!-- UV Index -->
             <div class="stat" id="stat-uv">
                 <p>UV Index</p>
                 <p id="uvIndex"></p>
                 <p id="uvState"></p>
             </div>
-            <!-- Feels Like -->
             <div class="stat">
                 <p>Feels Like</p>
                 <p id="feelsLike"></p>
             </div>
-            <!-- Precipitation -->
             <div class="stat">
                 <p>Precipitation</p>
                 <p id="precipitation"></p>
             </div>
-            <!-- Visibility -->
             <div class="stat">
                 <p>Visibility</p>
                 <p id="visibility"></p>
             </div>
-            <!-- Pressure -->
             <div class="stat">
                 <p>Pressure</p>
                 <p id="pressure"></p>
             </div>
-            <!-- Wind Direction -->
-            <div class="stat">
-                <p>Wind Direction</p>
-                <p id="windDirection"></p>
-            </div>
-
-
         </div>
-
-        <script src="assets/js/app.js"></script>
+ 
+    </div>
+ 
+    <script src="assets/js/app.js"></script>
 </body>
-
+ 
 </html>
