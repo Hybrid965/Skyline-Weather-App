@@ -47,6 +47,7 @@ const btn = document.getElementById("searchBtn");
 let input = document.getElementById("cityInput");
 let cityName = ''
 let countryName = ''
+let cityTimezone = ''
 
 //=====================================================================
 // Event Listener for search button
@@ -59,9 +60,10 @@ btn.addEventListener("click", function () {
     fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`)
         .then(res => res.json())
         .then(data => {
-            const { latitude, longitude, name, country } = data.results[0];
+            const { latitude, longitude, name, country, timezone } = data.results[0];
             cityName = name;
             countryName = country;
+            cityTimezone = timezone
 
             //=====================================================================
             // Return latitude, longitude, name, country, uv index from the API
@@ -94,6 +96,17 @@ btn.addEventListener("click", function () {
             document.getElementById('visibility').textContent = (weather.current.visibility / 1000).toFixed(1) + ' km';
             document.getElementById('pressure').textContent = Math.round(weather.current.surface_pressure) + ' hPa';
             document.getElementById('windDir').textContent = getWindDirection(weather.current.winddirection_10m);
+
+            //Getting the time
+            const now = new Date();
+            const localtime = new Intl.DateTimeFormat('en-GB', {
+                timeZone: cityTimezone,
+                weekday: 'long',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(now);
+
+            document.getElementById('dateTime').textContent = localtime;
 
             //=====================================================================
             // Hide the default view 
