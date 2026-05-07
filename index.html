@@ -1,49 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
- 
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skyline Weather</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
- 
+
 <body>
- 
+
     <!-- Header -->
     <header>
         <h1>Sky<span>line</span></h1>
     </header>
- 
+
     <!-- Container -->
     <div class="container">
- 
+
         <!-- Search Bar -->
         <div class="search-bar">
             <input type="text" id="cityInput" placeholder="Search for a city..." autocomplete="off">
             <button id="searchBtn">🔍</button>
         </div>
- 
+
         <!-- Last Searched -->
         <div class="last-searched" id="lastSearched">
             🕐 Last searched: <strong id="lastCity"></strong>
         </div>
- 
+
         <!-- Default View -->
         <div class="default" id="default">
             <div class="default-icon">🌍</div>
             <h1>Where in the World?</h1>
             <p class="default-sub">Search for any city to get the current weather and forecast.</p>
         </div>
- 
+
         <!-- Weather Card -->
         <div class="weather-card" id="weatherCard">
             <div class="card-top">
                 <div class="location-block">
                     <p id="countryName"></p>
                     <p id="cityName"></p>
+                    <p id="dateTime"></p>
                 </div>
                 <div class="temp-block">
                     <span id="weatherIcon"></span>
@@ -60,13 +63,13 @@
                 <div class="high-low" id="highLow"></div>
             </div>
         </div>
- 
+
         <!-- 5 Day Forecast -->
         <div class="forecast" id="forecast">
             <div class="forecast-label">5-day forecast</div>
             <div class="forecast-grid" id="forecastGrid"></div>
         </div>
- 
+
         <!-- Stats -->
         <div class="stats" id="stats">
             <div class="stat" id="stat-humidity">
@@ -100,10 +103,10 @@
                 <p id="pressure"></p>
             </div>
         </div>
- 
+
     </div>
- 
+
     <script src="assets/js/app.js"></script>
 </body>
- 
+
 </html>
