@@ -192,6 +192,13 @@ h1 span {
     pointer-events: none;
 }
 
+#dateTime {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-weight: 300;
+    margin-top: 4px;
+}
+
 /* Card top row — icon/temp right, location left */
 .card-top {
     display: flex;
