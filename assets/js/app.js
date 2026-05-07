@@ -75,7 +75,7 @@ let cityTimezone = ''
 //=====================================================================
 // Event Listener for search button
 btn.addEventListener("click", function () {
-    
+
     //=====================================================================
     // Assign city variable to the input value from the user
     const city = input.value;
@@ -207,6 +207,8 @@ document.getElementById('toggleF').addEventListener('click', function () {
     document.getElementById('toggleC').classList.remove('active');
 });
 //=====================================================================
+// Additional Event Listeners
+
 // Event Listener for Enter Key
 input.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
@@ -214,6 +216,46 @@ input.addEventListener('keydown', function (e) {
     }
 });
 
+//Event Listener for Location button
+document.getElementById('locationBtn').addEventListener('click', function () {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            document.getElementById('spinner').style.display = 'block';
+            document.getElementById('default').style.display = 'none';
+
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+                .then(res => {
+                    //Check if it resolved location
+                    if (!res.ok) {
+                        throw new Error('Reverse geocoding failed');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    const city =
+                        data.address.city ||
+                        data.address.town ||
+                        data.address.village;
+                    if (!city) {
+                        throw new Error('No city found');
+                    }
+                    input.value = city;
+                    btn.click();
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Unable to get your location.');
+                    //Stop spinner
+                    document.getElementById('spinner').style.display = 'none';
+                });
+        });
+    } else {
+        alert('Geolocation is not supported by your browser.');
+    }
+
+});
 //=====================================================================
 // On page load get local stoage
 window.addEventListener('load', function () {
