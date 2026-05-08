@@ -30,6 +30,13 @@ body {
     font-family: 'DM Sans', sans-serif;
 }
 
+/* Sunny state */
+body.sunny-glow {
+    background: 
+        radial-gradient(circle at 80% 20%, rgba(255, 230, 0, 0.25) 0%, transparent 50%), 
+        linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
+}
+
 body::before {
     content: '';
     position: fixed;
@@ -494,6 +501,24 @@ a{
     font-weight: 400;
     font-family: 'DM Sans', sans-serif;
 }
+/* Animation */
+#weather-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1; 
+    pointer-events: none; 
+    opacity: 0.3;
+}
+
+#weather-animation::part(canvas) {
+    object-fit: cover;
+}
+
+
+
 
 /* MEDIA QUERIES */
 @media (max-width: 768px) {

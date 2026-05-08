@@ -28,6 +28,39 @@ const weatherConditions = {
 };
 //=====================================================================
 //Functions
+//Function for dynamic background animations
+function updateWeatherUI(code) {
+    const weatherAnim = document.querySelector('#weather-animation');
+    if (!weatherAnim) return;
+
+    const rainCodes = [51, 53, 55, 61, 63, 65, 80, 81, 82];
+    const snowCodes = [71, 73, 75, 77, 85, 86];
+    const stormCodes = [95, 96, 99];
+    let body = document.querySelector('body')
+    
+    if (code <= 1) { // Clear or Mainly Clear
+        body.classList.add('sunny-glow');
+    }
+
+    else if (rainCodes.includes(code)) {
+        weatherAnim.setAttribute('src', 'https://lottie.host/6562c01f-dac7-4a2a-ac81-9138db3bddbf/yrbxneHuF0.lottie');
+        body.classList.remove('sunny-glow')
+    }
+    else if (snowCodes.includes(code)) {
+        weatherAnim.setAttribute('src', 'https://lottie.host/f3a2d154-a4e2-43be-b348-a3cad637b8d1/vesOckjaNN.lottie');
+        body.classList.remove('sunny-glow')
+    }
+    else if (stormCodes.includes(code)) {
+        weatherAnim.setAttribute('src', 'https://lottie.host/6562c01f-dac7-4a2a-ac81-9138db3bddbf/yrbxneHuF0.lottie');
+        body.classList.remove('sunny-glow')
+    }
+
+    else {
+        // Default to a cloudy animation
+        body.classList.remove('sunny-glow')
+        weatherAnim.setAttribute('src', 'https://lottie.host/84af1f9a-968c-43d2-861d-d17839dab9f7/6zd9IYLpKB.lottie');
+    }
+}
 
 // Degree Function
 function getWindDirection(degrees) {
@@ -207,6 +240,9 @@ btn.addEventListener("click", function () {
             input.value = '';
             //Hide the spinner 
             document.getElementById('spinner').style.display = 'none';
+            //=====================================================================
+            // Update background
+            updateWeatherUI(code)
         });
 });
 
