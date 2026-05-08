@@ -39,6 +39,7 @@ function updateWeatherUI(code) {
     let body = document.querySelector('body')
 
     if (code <= 1) { // Clear or Mainly Clear
+        weatherAnim.setAttribute('src', 'https://lottie.host/84af1f9a-968c-43d2-861d-d17839dab9f7/6zd9IYLpKB.lottie');
         body.classList.add('sunny-glow');
     }
 
