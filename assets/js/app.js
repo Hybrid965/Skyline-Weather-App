@@ -125,136 +125,137 @@ btn.addEventListener("click", function () {
         .then(data => {
 
             console.log(data)
+            // Error Handling for invalid city
+            if (!data.results || data.results.length === 0) {
+                document.getElementById('spinner').style.display = 'none';
+                const error = document.getElementById('errorMessage');
+                error.textContent = 'City not found, please try again';
+                error.style.display = 'block';
+
+
+
+                // Hide weather UI
+                document.getElementById('weatherCard').style.display = 'none';
+                document.getElementById('stats').style.display = 'none';
+                document.getElementById('forecast').style.display = 'none';
+
+                return
+            }
 
             // Prefer UK locations
             const bestMatch =
                 data.results.find(function (place) {
 
-                   return place.country === 'United Kingdom'}) || data.results[0];
-        
+                    return place.country === 'United Kingdom'
+                }) || data.results[0];
+            document.getElementById('errorMessage').style.display = 'none';
 
-            // Error Handling for invalid city
-            if (!data.results || data.results.length === 0) {
-        document.getElementById('spinner').style.display = 'none';
-        const error = document.getElementById('errorMessage');
-        error.textContent = 'City not found, please try again';
-        error.style.display = 'block';
+            // Get Data
+            const { latitude, longitude, name, country, timezone } = bestMatch;
+            cityName = name;
+            countryName = country;
+            cityTimezone = timezone
 
-        // Hide weather UI
-        document.getElementById('weatherCard').style.display = 'none';
-        document.getElementById('stats').style.display = 'none';
-        document.getElementById('forecast').style.display = 'none';
+            //=====================================================================
+            // Return latitude, longitude, name, country, uv index from the API
+            return (fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,surface_pressure,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=5&timezone=auto`))
 
-        return
-    }
-    document.getElementById('errorMessage').style.display = 'none';
+        })
+        .then(res => res.json())
+        .then(weather => {
+            console.log(weather.current)
+            const code = weather.current.weathercode;
 
-    // Get Data
-    const { latitude, longitude, name, country, timezone } = bestMatch;
-    cityName = name;
-    countryName = country;
-    cityTimezone = timezone
+            //=====================================================================
+            //Unhide the Data
+            document.getElementById('weatherCard').style.display = 'block';
+            document.getElementById('stats').style.display = 'grid';
+            document.getElementById('forecast').style.display = 'block';
 
-    //=====================================================================
-    // Return latitude, longitude, name, country, uv index from the API
-    return (fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,surface_pressure,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=5&timezone=auto`))
+            //=====================================================================
+            // Paste the data onto the DOM
+            document.getElementById('cityName').textContent = cityName;
+            document.getElementById('countryName').textContent = countryName;
+            document.getElementById('temperature').innerHTML = `${Math.round(weather.current.temperature_2m)}<sup>°C</sup>`;
+            document.getElementById('wind').textContent = Math.round(weather.current.windspeed_10m) + ' km/h';
+            document.getElementById('humidity').textContent = Math.round(weather.current.relative_humidity_2m) + '%';
+            document.getElementById('weatherIcon').textContent = weatherConditions[code].icon;
+            document.getElementById('condition').textContent = weatherConditions[code].label;
+            document.getElementById('uvIndex').textContent = Math.round(weather.current.uv_index);
+            document.getElementById('uvState').textContent = getUvState(weather.current.uv_index);
+            document.getElementById('feelsLike').textContent = Math.round(weather.current.apparent_temperature) + '°C';
+            document.getElementById('precipitation').textContent = weather.current.precipitation + ' mm';
+            document.getElementById('visibility').textContent = (weather.current.visibility / 1000).toFixed(1) + ' km';
+            document.getElementById('pressure').textContent = Math.round(weather.current.surface_pressure) + ' hPa';
+            document.getElementById('windDir').textContent = getWindDirection(weather.current.winddirection_10m);
 
-})
-    .then(res => res.json())
-    .then(weather => {
-        console.log(weather.current)
-        const code = weather.current.weathercode;
+            //Local Stoage Save
+            let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            if (history.includes(cityName)) {
+                history.splice(history.indexOf(cityName), 1);
+            }
+            history.unshift(cityName);
+            if (history.length > 3) {
+                history.pop();
+            }
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+            updateHistoryChips();
 
-        //=====================================================================
-        //Unhide the Data
-        document.getElementById('weatherCard').style.display = 'block';
-        document.getElementById('stats').style.display = 'grid';
-        document.getElementById('forecast').style.display = 'block';
+            //Getting the time
+            const now = new Date();
+            const localtime = new Intl.DateTimeFormat('en-GB', {
+                timeZone: cityTimezone,
+                weekday: 'long',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(now);
 
-        //=====================================================================
-        // Paste the data onto the DOM
-        document.getElementById('cityName').textContent = cityName;
-        document.getElementById('countryName').textContent = countryName;
-        document.getElementById('temperature').innerHTML = `${Math.round(weather.current.temperature_2m)}<sup>°C</sup>`;
-        document.getElementById('wind').textContent = Math.round(weather.current.windspeed_10m) + ' km/h';
-        document.getElementById('humidity').textContent = Math.round(weather.current.relative_humidity_2m) + '%';
-        document.getElementById('weatherIcon').textContent = weatherConditions[code].icon;
-        document.getElementById('condition').textContent = weatherConditions[code].label;
-        document.getElementById('uvIndex').textContent = Math.round(weather.current.uv_index);
-        document.getElementById('uvState').textContent = getUvState(weather.current.uv_index);
-        document.getElementById('feelsLike').textContent = Math.round(weather.current.apparent_temperature) + '°C';
-        document.getElementById('precipitation').textContent = weather.current.precipitation + ' mm';
-        document.getElementById('visibility').textContent = (weather.current.visibility / 1000).toFixed(1) + ' km';
-        document.getElementById('pressure').textContent = Math.round(weather.current.surface_pressure) + ' hPa';
-        document.getElementById('windDir').textContent = getWindDirection(weather.current.winddirection_10m);
+            document.getElementById('dateTime').textContent = localtime;
 
-        //Local Stoage Save
-        let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-        if (history.includes(cityName)) {
-            history.splice(history.indexOf(cityName), 1);
-        }
-        history.unshift(cityName);
-        if (history.length > 3) {
-            history.pop();
-        }
-        localStorage.setItem('searchHistory', JSON.stringify(history));
-        updateHistoryChips();
+            //Update the Temp
+            rawTemp = Math.round(weather.current.temperature_2m);
 
-        //Getting the time
-        const now = new Date();
-        const localtime = new Intl.DateTimeFormat('en-GB', {
-            timeZone: cityTimezone,
-            weekday: 'long',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(now);
+            //=====================================================================
+            // Hide the default view 
+            document.getElementById('default').style.display = "none";
 
-        document.getElementById('dateTime').textContent = localtime;
+            //=====================================================================
+            //5 Day Forecast
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const forecastGrid = document.getElementById('forecastGrid');
+            forecastGrid.innerHTML = '';
 
-        //Update the Temp
-        rawTemp = Math.round(weather.current.temperature_2m);
+            for (let i = 0; i < 5; i++) {
+                const date = new Date(weather.daily.time[i]);
+                let dayName
+                if (i === 0) {
+                    dayName = 'Today'
+                } else {
+                    dayName = days[date.getDay()]
 
-        //=====================================================================
-        // Hide the default view 
-        document.getElementById('default').style.display = "none";
+                };
+                const icon = weatherConditions[weather.daily.weathercode[i]].icon;
+                const max = Math.round(weather.daily.temperature_2m_max[i]);
+                const min = Math.round(weather.daily.temperature_2m_min[i]);
 
-        //=====================================================================
-        //5 Day Forecast
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const forecastGrid = document.getElementById('forecastGrid');
-        forecastGrid.innerHTML = '';
-
-        for (let i = 0; i < 5; i++) {
-            const date = new Date(weather.daily.time[i]);
-            let dayName
-            if (i === 0) {
-                dayName = 'Today'
-            } else {
-                dayName = days[date.getDay()]
-
-            };
-            const icon = weatherConditions[weather.daily.weathercode[i]].icon;
-            const max = Math.round(weather.daily.temperature_2m_max[i]);
-            const min = Math.round(weather.daily.temperature_2m_min[i]);
-
-            forecastGrid.innerHTML += `
+                forecastGrid.innerHTML += `
         <div class="forecast-day">
             <p class="forecast-day-name">${dayName}</p>
             <span class="forecast-icon">${icon}</span>
             <p class="forecast-max">${max}°</p>
             <p class="forecast-min">${min}°</p>
         </div>`;
-        }
+            }
 
-        //=====================================================================
-        // Clear search value
-        input.value = '';
-        //Hide the spinner 
-        document.getElementById('spinner').style.display = 'none';
-        //=====================================================================
-        // Update background
-        updateWeatherUI(code)
-    });
+            //=====================================================================
+            // Clear search value
+            input.value = '';
+            //Hide the spinner 
+            document.getElementById('spinner').style.display = 'none';
+            //=====================================================================
+            // Update background
+            updateWeatherUI(code)
+        });
 });
 
 //=====================================================================
