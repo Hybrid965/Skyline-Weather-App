@@ -102,21 +102,25 @@
                 <p>Visibility</p>
                 <p id="visibility"></p>
             </div>
-            <div class="stat">
-                <p>Pressure</p>
-                <p id="pressure"></p>
+            <div class="stat" id="sunriseCard">
+                <p class="stat-label">🌅 Sunrise</p>
+                <p class="stat-value" id="sunrise">--:--</p>
+            </div>
+
+            <div class="stat" id="sunsetCard">
+                <p class="stat-label">🌇 Sunset</p>
+                <p class="stat-value" id="sunset">--:--</p>
             </div>
         </div>
+
 
     </div>
 
     <script src="assets/js/app.js"></script>
     <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
 
-    <dotlottie-wc id="weather-animation" 
-    src="" 
-    autoplay loop>
-</dotlottie-wc>
+    <dotlottie-wc id="weather-animation" src="" autoplay loop>
+    </dotlottie-wc>
 </body>
 
 </html>

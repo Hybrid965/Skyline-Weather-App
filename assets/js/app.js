@@ -158,7 +158,7 @@ btn.addEventListener("click", function () {
 
             //=====================================================================
             // Return latitude, longitude, name, country, uv index from the API
-            return (fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,surface_pressure,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode&forecast_days=5&timezone=auto`))
+            return (fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode,sunrise,sunset&forecast_days=5&timezone=auto`))
 
         })
         .then(res => res.json())
@@ -186,9 +186,22 @@ btn.addEventListener("click", function () {
             document.getElementById('feelsLike').textContent = Math.round(weather.current.apparent_temperature) + '°C';
             document.getElementById('precipitation').textContent = weather.current.precipitation + ' mm';
             document.getElementById('visibility').textContent = (weather.current.visibility / 1000).toFixed(1) + ' km';
-            document.getElementById('pressure').textContent = Math.round(weather.current.surface_pressure) + ' hPa';
             document.getElementById('windDir').textContent = getWindDirection(weather.current.winddirection_10m);
 
+            // Sunrise & Sunset — index [0] is today
+            const sunriseRaw = new Date(weather.daily.sunrise[0]);
+            const sunsetRaw = new Date(weather.daily.sunset[0]);
+
+            const timeFormat = {
+                timeZone: cityTimezone,
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            };
+
+            document.getElementById('sunrise').textContent = new Intl.DateTimeFormat('en-GB', timeFormat).format(sunriseRaw);
+            document.getElementById('sunset').textContent = new Intl.DateTimeFormat('en-GB', timeFormat).format(sunsetRaw);
+            
             //Local Stoage Save
             let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
             if (history.includes(cityName)) {
