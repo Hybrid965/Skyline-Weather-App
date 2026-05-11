@@ -1,66 +1,82 @@
-# Skyline Weather App
+# Skyline Weather 🌤️
 
-## Purpose
-**Skyline Weather App** is a high-performance weather dashboard designed for users who want accurate meteorological data without the clutter of traditional news-heavy weather sites. While many platforms are saturated with advertisements and unnecessary articles, Skyline focuses on immediate, actionable data.
+A responsive weather application that provides real-time weather data and 5-day forecasts for any city in the world, with support for geolocation detection.
 
-The application allows users to search for real-time weather conditions and 5-day forecasts for any city globally. It is designed to be a "daily companion" for three primary use-cases: daily commuters planning their outfits, travelers checking destination climates, and outdoor enthusiasts monitoring environmental conditions.
+🔗 **Live Site:** [Skyline Weather](https://hybrid965.github.io/Skyline-Weather-App/)
 
-The goal is to provide a seamless interface where a user can enter a city name and instantly receive a visual and data-driven summary of the environment.
+---
 
-## User Stories
-### As a Daily Commuter
-- I want to see the current temperature and "feels like" reading so that I can decide what to wear before leaving the house.
-- I want to see the 5-day forecast so that I can plan my travel for the upcoming work week.
+## Screenshots
 
-### As a Traveller
-- I want to search for weather in different cities globally so that I can pack appropriately for my trip.
-- I want a history of my recently searched cities so that I can quickly toggle between my home and my destination
+![Skyline Weather App](assets/images/skyline.png)
 
-### As an Outdoor Enthusiast
-- I want to check wind speeds and humidity levels so that I can determine if it is a good day for cycling or hiking.
-- I want to see visual icons representing the weather so that I can understand the conditions at a glance.
-
-## UX Design
-
-### Strategy Plane
-- **Target Audience**: Commuters, students, travelers, and general users seeking quick weather updates.
-- **User Needs**: Rapid data retrieval, mobile-friendly interface, and high-contrast visuals for outdoor viewing.
-- **Rationale**: The project bridges the gap between complex meteorological tools and simple widgets, providing a "middle-ground" dashboard that is both lightweight and informative.
-
-### Scope Plane
-- **Project Requirements**: A fully responsive single-page application featuring a dynamic search bar, local storage for search history, and real-time API integration.
-- **Content Requirements**: Current weather metrics (Temp, Humidity, Wind, UV Index), 5-day forecast cards, and a search history sidebar.
-- **Out of Scope**: Historical weather data, interactive radar maps, and user account creation.
-
-### Structure Plane
-- **Information Hierarchy**: The search interface is positioned prominently at the top. Current weather is the largest element, followed by a secondary grid for the 5-day forecast.
-- **Interaction Feedback**: Buttons use subtle transitions on hover. The search history updates instantly when a new city is successfully called.
-
-### Skeleton Plane
-- **Wireframes**: Initial layouts were planned to ensure that even on mobile, the most vital information remains "above the fold".
-    - 📄 [Dashboard](docs/wireframes/dashboard.png) - Features the app branding and a persistent search input.
-    - A large hero section for the current city, followed by a horizontal row of cards.
-
-### Surface Plane
-- **Colour Palette**: A professional, high-contrast palette using deep blues and slate greys to ensure readability.
-- **Font**: Inter / Roboto - Used for all body text and data readouts for maximum legibility.
-- **Accessibility**: All images/icons include descriptive alt text or ARIA labels. Semantic HTML elements are used to provide clear structure.
-
-### Design Evolution
-TBD
+---
 
 ## Features
-### Search and History
-- **Global Search**: Find weather data for any city in the world using the Open Metro API.
-- **Search History**: The app saves recently searched cities to `localStorage`.
 
-### Real-Time Dashboard
-- **Dynamic Current Weather**: Displays the city name, date, weather icon, temperature, humidity, and wind speed.
-- **UV Index Indicator**: Includes a color-coded badge indicating favorable, moderate, or severe levels.
+- 🔍 Search weather by city name
+- 📍 Auto-detect current location via browser Geolocation API
+- 🌡️ Toggle between °C and °F
+- 📅 5-day weather forecast
+- 📊 Detailed weather metrics:
+  - Humidity
+  - Wind speed
+  - UV Index
+  - Feels like temperature
+  - Precipitation
+  - Visibility
+  - Sunrise & Sunset times
 
-## Future Development
-TBD
+---
 
-## Credits
-Favicon:
-- https://www.flaticon.com/authors/iconixar
+## Tech Stack
+
+- **HTML5** — Semantic structure
+- **CSS3** — Responsive layout and styling
+- **JavaScript (ES6+)** — Application logic and DOM manipulation
+- **[Open-Meteo API](https://open-meteo.com/)** — Free weather data, no API key required
+- **Browser Geolocation API** — Native device location detection with reverse geocoding
+
+---
+
+## How It Works
+
+1. On load, the app prompts the user to allow location access
+2. If granted, the browser's native Geolocation API returns the user's coordinates, which are then reverse geocoded to display a location name
+3. Weather data is fetched from the Open-Meteo API using `.then()` promise chaining
+4. Users can also search for any city manually and toggle between metric and imperial units
+
+---
+
+## Challenges & What I Learned
+
+**Error handling complexity** — One of the trickier aspects of this project was maintaining robust error handling across multiple async API calls. When adding new features, existing error handlers occasionally broke due to unhandled promise rejections or mismatched response structures. This reinforced the importance of planning error handling upfront rather than retrofitting it, and gave me solid experience debugging async JavaScript flows.
+
+**Geolocation + reverse geocoding pipeline** — Chaining the geolocation permission, coordinate retrieval, and reverse geocode lookup into a clean promise chain required careful handling of each step's success and failure states independently.
+
+---
+
+## Running Locally
+
+No build tools or dependencies required.
+
+```bash
+git clone https://github.com/Hybrid965/Skyline-Weather-App.git
+cd Skyline-Weather-App
+open index.html
+```
+
+Or simply open `index.html` directly in your browser.
+
+---
+
+## Future Improvements
+
+- Hourly forecast view
+- Weather alerts / severe weather warnings
+
+---
+
+## Author
+
+**Will** — [GitHub](https://github.com/Hybrid965) | [Portfolio](https://hybrid965.github.io/portfolio)
