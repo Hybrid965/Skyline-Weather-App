@@ -10,9 +10,13 @@ const weatherConditions = {
     51: { label: 'Light drizzle', icon: '🌦️' },
     53: { label: 'Drizzle', icon: '🌦️' },
     55: { label: 'Heavy drizzle', icon: '🌧️' },
+    56: { label: 'Light freezing drizzle', icon: '🌧️' },
+    57: { label: 'Freezing drizzle', icon: '🌧️' },
     61: { label: 'Light rain', icon: '🌧️' },
     63: { label: 'Rain', icon: '🌧️' },
     65: { label: 'Heavy rain', icon: '🌧️' },
+    66: { label: 'Light freezing rain', icon: '🌧️' },
+    67: { label: 'Freezing rain', icon: '🌧️' },
     71: { label: 'Light snow', icon: '🌨️' },
     73: { label: 'Snow', icon: '❄️' },
     75: { label: 'Heavy snow', icon: '❄️' },
@@ -28,6 +32,12 @@ const weatherConditions = {
 };
 //=====================================================================
 //Functions
+// Safe lookup — falls back to a generic icon/label instead of throwing
+// if the API ever returns a weather code that isnt mapped.
+function getCondition(code) {
+    return weatherConditions[code] || { label: 'Unknown', icon: '🌡️' };
+}
+
 //Function for dynamic background animations
 function updateWeatherUI(code) {
     const weatherAnim = document.querySelector('#weather-animation');
@@ -105,6 +115,7 @@ let cityName = ''
 let countryName = ''
 let cityTimezone = ''
 let rawTemp = 0
+let activeRequestId = 0 // guards against a slower, stale request overwriting a newer one
 
 
 //=====================================================================
@@ -113,16 +124,28 @@ btn.addEventListener("click", function () {
 
     //=====================================================================
     // Assign city variable to the input value from the user
-    const city = input.value;
+    const city = input.value.trim();
     input.value = '';
+
+    if (!city) return; // nothing typed — don't fire a request
+
+    // Mark this as the latest request; older in-flight requests will
+    // check this and bail out instead of overwriting the UI with stale data.
+    const requestId = ++activeRequestId;
+
     //Spinner
     document.getElementById('spinner').style.display = 'block';
     document.getElementById('default').style.display = 'none';
+    document.getElementById('errorMessage').style.display = 'none';
     //=====================================================================
-    // Fetch the API with the city variable
-    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=20`)
-        .then(res => res.json())
+    // Fetch the API with the city variable (encoded so spaces/accents work)
+    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=20`)
+        .then(res => {
+            if (!res.ok) throw new Error('Geocoding request failed');
+            return res.json();
+        })
         .then(data => {
+            if (requestId !== activeRequestId) return; // a newer search has superseded this one
 
             console.log(data)
             // Error Handling for invalid city
@@ -161,8 +184,15 @@ btn.addEventListener("click", function () {
             return (fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode,sunrise,sunset&forecast_days=5&timezone=auto`))
 
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res) return; // earlier step already returned/bailed
+            if (!res.ok) throw new Error('Forecast request failed');
+            return res.json();
+        })
         .then(weather => {
+            if (!weather) return; // bailed earlier (no results / superseded request)
+            if (requestId !== activeRequestId) return; // a newer search has superseded this one
+
             console.log(weather.current)
             const code = weather.current.weathercode;
 
@@ -179,11 +209,14 @@ btn.addEventListener("click", function () {
             document.getElementById('temperature').innerHTML = `${Math.round(weather.current.temperature_2m)}<sup>°C</sup>`;
             document.getElementById('wind').textContent = Math.round(weather.current.windspeed_10m) + ' km/h';
             document.getElementById('humidity').textContent = Math.round(weather.current.relative_humidity_2m) + '%';
-            document.getElementById('weatherIcon').textContent = weatherConditions[code].icon;
-            document.getElementById('condition').textContent = weatherConditions[code].label;
+            document.getElementById('weatherIcon').textContent = getCondition(code).icon;
+            document.getElementById('condition').textContent = getCondition(code).label;
             document.getElementById('uvIndex').textContent = Math.round(weather.current.uv_index);
             document.getElementById('uvState').textContent = getUvState(weather.current.uv_index);
-            document.getElementById('feelsLike').textContent = Math.round(weather.current.apparent_temperature) + '°C';
+            const feelsLikeC = Math.round(weather.current.apparent_temperature);
+            const feelsLikeEl = document.getElementById('feelsLike');
+            feelsLikeEl.textContent = feelsLikeC + '°C';
+            feelsLikeEl.dataset.c = feelsLikeC;
             document.getElementById('precipitation').textContent = weather.current.precipitation + ' mm';
             document.getElementById('visibility').textContent = (weather.current.visibility / 1000).toFixed(1) + ' km';
             document.getElementById('windDir').textContent = getWindDirection(weather.current.winddirection_10m);
@@ -247,7 +280,7 @@ btn.addEventListener("click", function () {
                     dayName = days[date.getDay()]
 
                 };
-                const icon = weatherConditions[weather.daily.weathercode[i]].icon;
+                const icon = getCondition(weather.daily.weathercode[i]).icon;
                 const max = Math.round(weather.daily.temperature_2m_max[i]);
                 const min = Math.round(weather.daily.temperature_2m_min[i]);
 
@@ -255,8 +288,8 @@ btn.addEventListener("click", function () {
         <div class="forecast-day">
             <p class="forecast-day-name">${dayName}</p>
             <span class="forecast-icon">${icon}</span>
-            <p class="forecast-max">${max}°</p>
-            <p class="forecast-min">${min}°</p>
+            <p class="forecast-max" data-c="${max}">${max}°</p>
+            <p class="forecast-min" data-c="${min}">${min}°</p>
         </div>`;
             }
 
@@ -268,22 +301,66 @@ btn.addEventListener("click", function () {
             //=====================================================================
             // Update background
             updateWeatherUI(code)
+
+            // Re-apply the saved unit preference (so it stays consistent across searches)
+            applyUnit(localStorage.getItem('preferredUnit') || 'C')
+        })
+        .catch(err => {
+            console.error(err);
+            if (requestId !== activeRequestId) return; // a newer search already took over
+            document.getElementById('spinner').style.display = 'none';
+            const error = document.getElementById('errorMessage');
+            error.textContent = 'Something went wrong fetching the weather. Please try again.';
+            error.style.display = 'block';
         });
 });
 
 //=====================================================================
 //Temperature toggle
+// Converts the current temp, feels-like, and every forecast high/low together,
+// and remembers the choice for next visit.
+function applyUnit(unit) {
+    const tempEl = document.getElementById('temperature');
+    const feelsLikeEl = document.getElementById('feelsLike');
+
+    if (unit === 'F') {
+        const f = Math.round((rawTemp * 9 / 5) + 32);
+        tempEl.innerHTML = `${f}<sup>°F</sup>`;
+        if (feelsLikeEl.dataset.c !== undefined) {
+            const f = Math.round((Number(feelsLikeEl.dataset.c) * 9 / 5) + 32);
+            feelsLikeEl.textContent = f + '°F';
+        }
+        document.querySelectorAll('.forecast-max, .forecast-min').forEach(el => {
+            if (el.dataset.c !== undefined) {
+                const f = Math.round((Number(el.dataset.c) * 9 / 5) + 32);
+                el.textContent = f + '°';
+            }
+        });
+        document.getElementById('toggleF').classList.add('active');
+        document.getElementById('toggleC').classList.remove('active');
+    } else {
+        tempEl.innerHTML = `${rawTemp}<sup>°C</sup>`;
+        if (feelsLikeEl.dataset.c !== undefined) {
+            feelsLikeEl.textContent = feelsLikeEl.dataset.c + '°C';
+        }
+        document.querySelectorAll('.forecast-max, .forecast-min').forEach(el => {
+            if (el.dataset.c !== undefined) {
+                el.textContent = el.dataset.c + '°';
+            }
+        });
+        document.getElementById('toggleC').classList.add('active');
+        document.getElementById('toggleF').classList.remove('active');
+    }
+
+    localStorage.setItem('preferredUnit', unit);
+}
+
 document.getElementById('toggleC').addEventListener('click', function () {
-    document.getElementById('temperature').innerHTML = `${rawTemp}<sup>°C</sup>`;
-    document.getElementById('toggleC').classList.add('active');
-    document.getElementById('toggleF').classList.remove('active');
+    applyUnit('C');
 });
 
 document.getElementById('toggleF').addEventListener('click', function () {
-    const f = Math.round((rawTemp * 9 / 5) + 32);
-    document.getElementById('temperature').innerHTML = `${f}<sup>°F</sup>`;
-    document.getElementById('toggleF').classList.add('active');
-    document.getElementById('toggleC').classList.remove('active');
+    applyUnit('F');
 });
 //=====================================================================
 // Additional Event Listeners
@@ -339,4 +416,11 @@ document.getElementById('locationBtn').addEventListener('click', function () {
 // On page load get local stoage
 window.addEventListener('load', function () {
     updateHistoryChips();
+
+    // Reflect the saved unit preference on the toggle buttons (actual values
+    // get applied once a search loads data, via applyUnit in the search handler)
+    if (localStorage.getItem('preferredUnit') === 'F') {
+        document.getElementById('toggleF').classList.add('active');
+        document.getElementById('toggleC').classList.remove('active');
+    }
 });
