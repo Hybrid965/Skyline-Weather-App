@@ -56,8 +56,6 @@ header {
     padding: 2rem 1.5rem 0;
     max-width: 680px;
     margin: 0 auto;
-    
-    
 }
 
 h1 {
@@ -73,9 +71,10 @@ h1 span {
     color: var(--accent);
 }
 
-a{
+a {
     text-decoration: none;
 }
+
 /* CONTAINER */
 .container {
     position: relative;
@@ -152,6 +151,7 @@ a{
     border-color: var(--accent);
     color: var(--text);
 }
+
 .spinner {
     width: 32px;
     height: 32px;
@@ -167,7 +167,7 @@ a{
     to { transform: rotate(360deg); }
 }
 
-.error-message{
+.error-message {
     color: #ff4d4d;
     text-align: center;
     margin: 10px 0px 20px 0px;
@@ -175,7 +175,7 @@ a{
     display: none;
 }
 
-/* LOCATION PICKER — shown when a search matches multiple places */
+/* LOCATION PICKER */
 .location-picker {
     display: none;
     flex-direction: column;
@@ -302,7 +302,7 @@ a{
     margin-top: 4px;
 }
 
-/* Card top row — icon/temp right, location left */
+/* Card top row */
 .card-top {
     display: flex;
     align-items: flex-start;
@@ -501,8 +501,28 @@ a{
     display: flex;
     gap: 0.6rem;
     overflow-x: auto;
-    padding-bottom: 6px;
+    padding-bottom: 8px; /* Slightly increased to give the custom scrollbar room */
 }
+
+/* --- CUSTOM SCROLLBAR UPDATES --- */
+.hourly-grid::-webkit-scrollbar {
+    height: 5px; /* Keeps it sleek and thin */
+}
+
+.hourly-grid::-webkit-scrollbar-track {
+    background: transparent; /* Invisible track blends perfectly into the background */
+}
+
+.hourly-grid::-webkit-scrollbar-thumb {
+    background: var(--glass-hover); /* Subdued handle by default */
+    border-radius: 100px;
+    transition: background 0.2s;
+}
+
+.hourly-grid::-webkit-scrollbar-thumb:hover {
+    background: var(--accent); /* Lights up blue when user hovers over it */
+}
+/* --------------------------------- */
 
 .hourly-hour {
     flex: 0 0 auto;
@@ -556,7 +576,6 @@ a{
 .stat {
     background: var(--glass);
     border: 1px solid var(--border);
-    border-radius: 16px;
     padding: 1rem 1.1rem;
     transition: background 0.2s, border-color 0.2s;
     aspect-ratio: unset;
@@ -603,6 +622,7 @@ a{
     font-weight: 400;
     font-family: 'DM Sans', sans-serif;
 }
+
 /* Animation */
 #weather-animation {
     position: fixed;
@@ -618,9 +638,6 @@ a{
 #weather-animation::part(canvas) {
     object-fit: cover;
 }
-
-
-
 
 /* MEDIA QUERIES */
 @media (max-width: 768px) {
