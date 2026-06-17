@@ -88,11 +88,71 @@ function getUvState(uv) {
     return 'Extreme';
 }
 
+// Renders the hourly strip for one of the 5 forecast days.
+// For today (dayIndex 0) it only shows the current hour onward;
+// for other days it shows the full 24 hours.
+function renderHourly(dayIndex) {
+    if (!currentWeather || !currentWeather.hourly) return;
+
+    selectedDayIndex = dayIndex;
+
+    // Highlight the selected day in the 5-day grid
+    document.querySelectorAll('.forecast-day').forEach(dayEl => {
+        const isSelected = Number(dayEl.dataset.dayIndex) === dayIndex;
+        dayEl.classList.toggle('selected', isSelected);
+        dayEl.setAttribute('aria-pressed', isSelected);
+    });
+
+    const dayDate = currentWeather.daily.time[dayIndex]; // e.g. "2026-06-17"
+    let currentHour = -1;
+    if (dayIndex === 0) {
+        currentHour = Number(new Intl.DateTimeFormat('en-GB', {
+            timeZone: cityTimezone,
+            hour: '2-digit',
+            hourCycle: 'h23'
+        }).format(new Date()));
+    }
+
+    const hourIndexes = currentWeather.hourly.time
+        .map((time, i) => ({ time, i }))
+        .filter(entry => entry.time.startsWith(dayDate))
+        .filter(entry => dayIndex !== 0 || Number(entry.time.slice(11, 13)) >= currentHour)
+        .map(entry => entry.i);
+
+    const hourlyGrid = document.getElementById('hourlyGrid');
+    hourlyGrid.innerHTML = '';
+
+    hourIndexes.forEach((i, position) => {
+        const hour = Number(currentWeather.hourly.time[i].slice(11, 13));
+        const label = position === 0 && dayIndex === 0
+            ? 'Now'
+            : new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: true }).format(new Date(2000, 0, 1, hour));
+        const icon = getCondition(currentWeather.hourly.weathercode[i]).icon;
+        const temp = Math.round(currentWeather.hourly.temperature_2m[i]);
+        const precipProb = currentWeather.hourly.precipitation_probability
+            ? currentWeather.hourly.precipitation_probability[i]
+            : null;
+
+        const hourEl = document.createElement('div');
+        hourEl.className = 'hourly-hour' + (label === 'Now' ? ' now' : '');
+        hourEl.innerHTML = `
+            <p class="hourly-time">${label}</p>
+            <span class="hourly-icon">${icon}</span>
+            <p class="hourly-temp" data-c="${temp}">${temp}°</p>
+            ${precipProb !== null ? `<p class="hourly-precip">${precipProb}%</p>` : ''}
+        `;
+        hourlyGrid.appendChild(hourEl);
+    });
+
+    // Keep the new hour cards consistent with whichever unit is currently active
+    applyUnit(localStorage.getItem('preferredUnit') || 'C');
+}
+
 //=====================================================================
 // Search disambiguation — lets people type "Dover, UK" or "Dover, Tennessee"
 // to skip straight to the right place instead of guessing.
 
-// Splits "Dover, UK" into { city: 'Dover', qualifier: 'UK' }.
+// Splits "Dover, Tennessee" into { city: 'Dover', qualifier: 'Tennessee' }.
 // Anything after the first comma is treated as the qualifier.
 function parseCityInput(raw) {
     const commaIndex = raw.indexOf(',');
@@ -116,7 +176,7 @@ const countryAliases = {
     'america': 'united states'
 };
 
-// Does a geocoding result match a typed qualifier such as "UK", "Tennessee", "Kent"
+// Does a geocoding result match a typed qualifier such as "UK", "Tennessee", "Kent"?
 function matchesQualifier(place, qualifier) {
     const q = qualifier.toLowerCase();
     const country = (place.country || '').toLowerCase();
@@ -205,6 +265,8 @@ let countryName = ''
 let cityTimezone = ''
 let rawTemp = 0
 let activeRequestId = 0 // guards against a slower, stale request overwriting a newer one
+let currentWeather = null // the most recently loaded forecast, kept around for the hourly view
+let selectedDayIndex = 0 // which of the 5 forecast days the hourly view is showing
 
 
 //=====================================================================
@@ -297,7 +359,7 @@ function loadWeatherForPlace(place, requestId) {
 
     //=====================================================================
     // Return latitude, longitude, name, country, uv index from the API
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode,sunrise,sunset&forecast_days=5&timezone=auto`)
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,apparent_temperature,winddirection_10m&hourly=temperature_2m,weathercode,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weathercode,sunrise,sunset&forecast_days=5&timezone=auto`)
         .then(res => {
             if (!res.ok) throw new Error('Forecast request failed');
             return res.json();
@@ -305,6 +367,7 @@ function loadWeatherForPlace(place, requestId) {
         .then(weather => {
             if (requestId !== activeRequestId) return; // a newer search has superseded this one
 
+            currentWeather = weather; // kept around so clicking a day can re-render the hourly strip
             const code = weather.current.weathercode;
 
             //=====================================================================
@@ -400,13 +463,29 @@ function loadWeatherForPlace(place, requestId) {
                 const min = Math.round(weather.daily.temperature_2m_min[i]);
 
                 forecastGrid.innerHTML += `
-        <div class="forecast-day">
+        <div class="forecast-day" data-day-index="${i}" role="button" tabindex="0" aria-pressed="false" aria-label="Show hourly forecast for ${dayName}">
             <p class="forecast-day-name">${dayName}</p>
             <span class="forecast-icon">${icon}</span>
             <p class="forecast-max" data-c="${max}">${max}°</p>
             <p class="forecast-min" data-c="${min}">${min}°</p>
         </div>`;
             }
+
+            // Wire up day clicks/keyboard activation to switch the hourly strip below
+            document.querySelectorAll('#forecastGrid .forecast-day').forEach(dayEl => {
+                dayEl.addEventListener('click', function () {
+                    renderHourly(Number(dayEl.dataset.dayIndex));
+                });
+                dayEl.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        renderHourly(Number(dayEl.dataset.dayIndex));
+                    }
+                });
+            });
+
+            // Default to showing today's hourly forecast
+            renderHourly(0);
 
             //=====================================================================
             // Clear search value
@@ -445,7 +524,7 @@ function applyUnit(unit) {
             const feelsF = Math.round((Number(feelsLikeEl.dataset.c) * 9 / 5) + 32);
             feelsLikeEl.textContent = feelsF + '°F';
         }
-        document.querySelectorAll('.forecast-max, .forecast-min').forEach(el => {
+        document.querySelectorAll('.forecast-max, .forecast-min, .hourly-temp').forEach(el => {
             if (el.dataset.c !== undefined) {
                 const dayF = Math.round((Number(el.dataset.c) * 9 / 5) + 32);
                 el.textContent = dayF + '°';
@@ -458,7 +537,7 @@ function applyUnit(unit) {
         if (feelsLikeEl.dataset.c !== undefined) {
             feelsLikeEl.textContent = feelsLikeEl.dataset.c + '°C';
         }
-        document.querySelectorAll('.forecast-max, .forecast-min').forEach(el => {
+        document.querySelectorAll('.forecast-max, .forecast-min, .hourly-temp').forEach(el => {
             if (el.dataset.c !== undefined) {
                 el.textContent = el.dataset.c + '°';
             }

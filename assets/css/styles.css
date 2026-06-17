@@ -449,11 +449,18 @@ a{
     text-align: center;
     padding: 0.6rem 0.25rem;
     border-radius: 12px;
-    transition: background 0.2s;
+    transition: background 0.2s, border-color 0.2s;
+    cursor: pointer;
+    border: 1px solid transparent;
 }
 
 .forecast-day:hover {
     background: var(--glass-hover);
+}
+
+.forecast-day.selected {
+    background: var(--accent-dim);
+    border-color: var(--border-accent);
 }
 
 .forecast-day-name {
@@ -481,6 +488,61 @@ a{
     font-size: 0.78rem;
     color: var(--text-dim);
     margin-top: 1px;
+}
+
+/* HOURLY FORECAST */
+.hourly-forecast {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+}
+
+.hourly-grid {
+    display: flex;
+    gap: 0.6rem;
+    overflow-x: auto;
+    padding-bottom: 6px;
+}
+
+.hourly-hour {
+    flex: 0 0 auto;
+    min-width: 58px;
+    text-align: center;
+    padding: 0.6rem 0.5rem;
+    border-radius: 12px;
+    background: var(--glass-hover);
+}
+
+.hourly-hour.now {
+    background: var(--accent-dim);
+    border: 1px solid var(--border-accent);
+}
+
+.hourly-time {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+}
+
+.hourly-icon {
+    font-size: 1.3rem;
+    display: block;
+    margin-bottom: 0.4rem;
+}
+
+.hourly-temp {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.hourly-precip {
+    font-size: 0.62rem;
+    color: var(--accent);
+    margin-top: 2px;
 }
 
 /* STATS */
