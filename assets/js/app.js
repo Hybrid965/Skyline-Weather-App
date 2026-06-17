@@ -33,7 +33,7 @@ const weatherConditions = {
 //=====================================================================
 //Functions
 // Safe lookup — falls back to a generic icon/label instead of throwing
-// if the API ever returns a weather code that isnt mapped.
+// if the API ever returns a weather code we haven't mapped.
 function getCondition(code) {
     return weatherConditions[code] || { label: 'Unknown', icon: '🌡️' };
 }
@@ -88,18 +88,107 @@ function getUvState(uv) {
     return 'Extreme';
 }
 
-// Local Storage Function 
+//=====================================================================
+// Search disambiguation — lets people type "Dover, UK" or "Dover, Tennessee"
+// to skip straight to the right place instead of guessing.
+
+// Splits "Dover, UK" into { city: 'Dover', qualifier: 'UK' }.
+// Anything after the first comma is treated as the qualifier.
+function parseCityInput(raw) {
+    const commaIndex = raw.indexOf(',');
+    if (commaIndex === -1) return { city: raw.trim(), qualifier: '' };
+    return {
+        city: raw.slice(0, commaIndex).trim(),
+        qualifier: raw.slice(commaIndex + 1).trim()
+    };
+}
+
+// Shorthand country names people commonly type instead of the full name
+const countryAliases = {
+    'uk': 'united kingdom',
+    'u.k.': 'united kingdom',
+    'gb': 'united kingdom',
+    'great britain': 'united kingdom',
+    'usa': 'united states',
+    'u.s.a.': 'united states',
+    'us': 'united states',
+    'u.s.': 'united states',
+    'america': 'united states'
+};
+
+// Does a geocoding result match a typed qualifier such as "UK", "Tennessee", "Kent"
+function matchesQualifier(place, qualifier) {
+    const q = qualifier.toLowerCase();
+    const country = (place.country || '').toLowerCase();
+    const countryCode = (place.country_code || '').toLowerCase();
+    const admin1 = (place.admin1 || '').toLowerCase();
+    const admin2 = (place.admin2 || '').toLowerCase();
+    const aliasedCountry = countryAliases[q];
+
+    return country === q ||
+        countryCode === q ||
+        admin1 === q ||
+        admin2 === q ||
+        admin1.includes(q) ||
+        admin2.includes(q) ||
+        (!!aliasedCountry && country === aliasedCountry);
+}
+
+// Renders a list of candidate places for the user to choose between,
+// e.g. when "Dover" alone matches several different places.
+function showLocationPicker(candidates, requestId) {
+    const picker = document.getElementById('locationPicker');
+    picker.innerHTML = '';
+
+    candidates.slice(0, 8).forEach(place => {
+        const option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'location-option';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'location-option-name';
+        nameEl.textContent = place.name;
+
+        const detailEl = document.createElement('span');
+        detailEl.className = 'location-option-detail';
+        detailEl.textContent = [place.admin1, place.country].filter(Boolean).join(', ');
+
+        option.appendChild(nameEl);
+        option.appendChild(detailEl);
+        option.addEventListener('click', function () {
+            hideLocationPicker();
+            loadWeatherForPlace(place, requestId);
+        });
+        picker.appendChild(option);
+    });
+
+    picker.style.display = 'flex';
+}
+
+function hideLocationPicker() {
+    const picker = document.getElementById('locationPicker');
+    picker.innerHTML = '';
+    picker.style.display = 'none';
+}
+
+// Local Storage Function
+// History entries are { name, qualifier } objects so a chip click can
+// re-run the exact same disambiguated search. Older plain-string entries
+// (saved before this feature existed) are still read correctly.
 function updateHistoryChips() {
     const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
     const container = document.getElementById('lastSearched');
     container.innerHTML = '';
 
-    history.forEach(city => {
+    history.forEach(entry => {
+        const name = typeof entry === 'string' ? entry : entry.name;
+        const qualifier = typeof entry === 'string' ? '' : (entry.qualifier || '');
+
         const chip = document.createElement('span');
         chip.classList.add('history-chip');
-        chip.textContent = '🕐 ' + city;
+        chip.textContent = '🕐 ' + name + (qualifier ? ', ' + qualifier : '');
         chip.addEventListener('click', function () {
-            input.value = city;
+            input.value = qualifier ? `${name}, ${qualifier}` : name;
             btn.click();
         });
         container.appendChild(chip);
@@ -123,11 +212,15 @@ let activeRequestId = 0 // guards against a slower, stale request overwriting a 
 btn.addEventListener("click", function () {
 
     //=====================================================================
-    // Assign city variable to the input value from the user
-    const city = input.value.trim();
+    // Assign city variable to the input value from the user, splitting
+    // off an optional qualifier — e.g. "Dover, Tennessee" or "Dover, UK"
+    const rawValue = input.value.trim();
     input.value = '';
+    hideLocationPicker();
 
-    if (!city) return; // nothing typed — don't fire a request
+    if (!rawValue) return; // nothing typed — don't fire a request
+
+    const { city, qualifier } = parseCityInput(rawValue);
 
     // Mark this as the latest request; older in-flight requests will
     // check this and bail out instead of overwriting the UI with stale data.
@@ -147,15 +240,12 @@ btn.addEventListener("click", function () {
         .then(data => {
             if (requestId !== activeRequestId) return; // a newer search has superseded this one
 
-            console.log(data)
             // Error Handling for invalid city
             if (!data.results || data.results.length === 0) {
                 document.getElementById('spinner').style.display = 'none';
                 const error = document.getElementById('errorMessage');
                 error.textContent = 'City not found, please try again';
                 error.style.display = 'block';
-
-
 
                 // Hide weather UI
                 document.getElementById('weatherCard').style.display = 'none';
@@ -165,35 +255,56 @@ btn.addEventListener("click", function () {
                 return
             }
 
-            // Prefer UK locations
-            const bestMatch =
-                data.results.find(function (place) {
+            // Narrow down using the typed qualifier, e.g. "Dover, UK" only
+            // keeps results in the United Kingdom; "Dover, Tennessee" only
+            // keeps the Tennessee one.
+            let candidates = data.results;
+            if (qualifier) {
+                const filtered = candidates.filter(place => matchesQualifier(place, qualifier));
+                if (filtered.length > 0) candidates = filtered;
+            }
 
-                    return place.country === 'United Kingdom'
-                }) || data.results[0];
-            document.getElementById('errorMessage').style.display = 'none';
-
-            // Get Data
-            const { latitude, longitude, name, country, timezone } = bestMatch;
-            cityName = name;
-            countryName = country;
-            cityTimezone = timezone
-
-            //=====================================================================
-            // Return latitude, longitude, name, country, uv index from the API
-            return (fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode,sunrise,sunset&forecast_days=5&timezone=auto`))
-
+            if (candidates.length === 1) {
+                // Unambiguous — go straight to the weather
+                loadWeatherForPlace(candidates[0], requestId);
+            } else {
+                // Still more than one match — let the user pick rather than guessing
+                document.getElementById('spinner').style.display = 'none';
+                showLocationPicker(candidates, requestId);
+            }
         })
+        .catch(err => {
+            console.error(err);
+            if (requestId !== activeRequestId) return; // a newer search already took over
+            document.getElementById('spinner').style.display = 'none';
+            const error = document.getElementById('errorMessage');
+            error.textContent = 'Something went wrong fetching the weather. Please try again.';
+            error.style.display = 'block';
+        });
+});
+
+//=====================================================================
+// Fetches and renders the forecast for one specific, already-chosen place.
+function loadWeatherForPlace(place, requestId) {
+    const { latitude, longitude, name, country, admin1, timezone } = place;
+    document.getElementById('errorMessage').style.display = 'none';
+    document.getElementById('spinner').style.display = 'block';
+
+    // Get Data
+    cityName = name;
+    countryName = [admin1, country].filter(Boolean).join(', ');
+    cityTimezone = timezone
+
+    //=====================================================================
+    // Return latitude, longitude, name, country, uv index from the API
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m,uv_index,precipitation,visibility,apparent_temperature,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,weathercode,sunrise,sunset&forecast_days=5&timezone=auto`)
         .then(res => {
-            if (!res) return; // earlier step already returned/bailed
             if (!res.ok) throw new Error('Forecast request failed');
             return res.json();
         })
         .then(weather => {
-            if (!weather) return; // bailed earlier (no results / superseded request)
             if (requestId !== activeRequestId) return; // a newer search has superseded this one
 
-            console.log(weather.current)
             const code = weather.current.weathercode;
 
             //=====================================================================
@@ -234,13 +345,17 @@ btn.addEventListener("click", function () {
 
             document.getElementById('sunrise').textContent = new Intl.DateTimeFormat('en-GB', timeFormat).format(sunriseRaw);
             document.getElementById('sunset').textContent = new Intl.DateTimeFormat('en-GB', timeFormat).format(sunsetRaw);
-            
-            //Local Stoage Save
+
+            //Local Storage Save — keep the qualifier so repeat-clicking the
+            //chip re-runs the exact same disambiguated search
+            const newEntry = { name: cityName, qualifier: admin1 || country || '' };
             let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-            if (history.includes(cityName)) {
-                history.splice(history.indexOf(cityName), 1);
-            }
-            history.unshift(cityName);
+            history = history.filter(entry => {
+                const entryName = typeof entry === 'string' ? entry : entry.name;
+                const entryQualifier = typeof entry === 'string' ? '' : (entry.qualifier || '');
+                return !(entryName === newEntry.name && entryQualifier === newEntry.qualifier);
+            });
+            history.unshift(newEntry);
             if (history.length > 3) {
                 history.pop();
             }
@@ -262,7 +377,7 @@ btn.addEventListener("click", function () {
             rawTemp = Math.round(weather.current.temperature_2m);
 
             //=====================================================================
-            // Hide the default view 
+            // Hide the default view
             document.getElementById('default').style.display = "none";
 
             //=====================================================================
@@ -296,7 +411,7 @@ btn.addEventListener("click", function () {
             //=====================================================================
             // Clear search value
             input.value = '';
-            //Hide the spinner 
+            //Hide the spinner
             document.getElementById('spinner').style.display = 'none';
             //=====================================================================
             // Update background
@@ -313,7 +428,7 @@ btn.addEventListener("click", function () {
             error.textContent = 'Something went wrong fetching the weather. Please try again.';
             error.style.display = 'block';
         });
-});
+}
 
 //=====================================================================
 //Temperature toggle
@@ -327,13 +442,13 @@ function applyUnit(unit) {
         const f = Math.round((rawTemp * 9 / 5) + 32);
         tempEl.innerHTML = `${f}<sup>°F</sup>`;
         if (feelsLikeEl.dataset.c !== undefined) {
-            const f = Math.round((Number(feelsLikeEl.dataset.c) * 9 / 5) + 32);
-            feelsLikeEl.textContent = f + '°F';
+            const feelsF = Math.round((Number(feelsLikeEl.dataset.c) * 9 / 5) + 32);
+            feelsLikeEl.textContent = feelsF + '°F';
         }
         document.querySelectorAll('.forecast-max, .forecast-min').forEach(el => {
             if (el.dataset.c !== undefined) {
-                const f = Math.round((Number(el.dataset.c) * 9 / 5) + 32);
-                el.textContent = f + '°';
+                const dayF = Math.round((Number(el.dataset.c) * 9 / 5) + 32);
+                el.textContent = dayF + '°';
             }
         });
         document.getElementById('toggleF').classList.add('active');
@@ -397,7 +512,11 @@ document.getElementById('locationBtn').addEventListener('click', function () {
                     if (!city) {
                         throw new Error('No city found');
                     }
-                    input.value = city;
+                    // Carry the region/country through too, so the follow-up
+                    // search lands on this exact place instead of guessing
+                    // between same-named cities elsewhere.
+                    const qualifier = data.address.state || data.address.country || '';
+                    input.value = qualifier ? `${city}, ${qualifier}` : city;
                     btn.click();
                 })
                 .catch(err => {

@@ -27,11 +27,14 @@
 
         <!-- Search Bar -->
         <div class="search-bar">
-            <input type="text" id="cityInput" placeholder="Search for a city..." aria-label="Search for a city" autocomplete="off">
+            <input type="text" id="cityInput" placeholder="Search for a city... e.g. Dover, UK" aria-label="Search for a city. You can add a region or country, e.g. Dover, UK" autocomplete="off">
             <button id="searchBtn" aria-label="Search">🔍</button>
         </div>
         <button id="locationBtn" aria-label="Use my current location">📍 Use my location</button>
         <div class="spinner" id="spinner"></div>
+
+        <!-- Location Picker (shown when a search matches multiple places) -->
+        <div class="location-picker" id="locationPicker"></div>
 
         <!-- Last Searched -->
         <div class="last-searched" id="lastSearched"></div>

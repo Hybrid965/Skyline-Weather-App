@@ -175,6 +175,46 @@ a{
     display: none;
 }
 
+/* LOCATION PICKER — shown when a search matches multiple places */
+.location-picker {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 1.25rem;
+}
+
+.location-option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    text-align: left;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.location-option:hover,
+.location-option:focus-visible {
+    border-color: var(--accent);
+    background: var(--glass-hover);
+}
+
+.location-option-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.location-option-detail {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+}
+
 /* LAST SEARCHED */
 .last-searched {
     display: none;
