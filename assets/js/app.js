@@ -355,7 +355,7 @@ function loadWeatherForPlace(place, requestId) {
     // Get Data
     cityName = name;
     countryName = [admin1, country].filter(Boolean).join(', ');
-    cityTimezone = timezone
+    cityTimezone = timezone || ''; // will be set properly below once weather data arrives
 
     //=====================================================================
     // Return latitude, longitude, name, country, uv index from the API
@@ -368,6 +368,10 @@ function loadWeatherForPlace(place, requestId) {
             if (requestId !== activeRequestId) return; // a newer search has superseded this one
 
             currentWeather = weather; // kept around so clicking a day can re-render the hourly strip
+
+            if (!cityTimezone && weather.timezone) {
+                cityTimezone = weather.timezone;
+            }
             const code = weather.current.weathercode;
 
             //=====================================================================
@@ -575,7 +579,9 @@ document.getElementById('locationBtn').addEventListener('click', function () {
             document.getElementById('spinner').style.display = 'block';
             document.getElementById('default').style.display = 'none';
 
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+            const requestId = ++activeRequestId;
+
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=16`)
                 .then(res => {
                     //Check if it resolved location
                     if (!res.ok) {
@@ -584,19 +590,50 @@ document.getElementById('locationBtn').addEventListener('click', function () {
                     return res.json();
                 })
                 .then(data => {
-                    const city =
-                        data.address.city ||
-                        data.address.town ||
-                        data.address.village;
-                    if (!city) {
-                        throw new Error('No city found');
+                    const addr = data.address || {};
+                    const county = addr.county || addr.state_district || '';
+
+                    let city =
+                        addr.town ||
+                        addr.village ||
+                        addr.city ||
+                        addr.suburb ||
+                        '';
+
+                    // Nominatim sometimes puts a district name (e.g. "Thanet")
+                    // into the town/city field instead of the actual settlement.
+                    // display_name lists features nearest-to-furthest, so its
+                    // first segment is almost always the real place name — use
+                    // it as a sanity check, and fall back to it if the address
+                    // breakdown gave us the district name instead.
+                    const firstSegment = (data.display_name || '').split(',')[0].trim();
+                    const looksLikeDistrict = !city || (county && city.toLowerCase() === county.toLowerCase());
+
+                    if (looksLikeDistrict && firstSegment) {
+                        city = firstSegment;
                     }
-                    // Carry the region/country through too, so the follow-up
-                    // search lands on this exact place instead of guessing
-                    // between same-named cities elsewhere.
-                    const qualifier = data.address.state || data.address.country || '';
-                    input.value = qualifier ? `${city}, ${qualifier}` : city;
-                    btn.click();
+
+                    if (!city) city = 'Your location';
+
+                    const country = addr.country || '';
+                    const admin1 = addr.state || county || '';
+
+                    // Build the place straight from the GPS coordinates we already
+                    // have, instead of re-searching the name through Open-Meteo's
+                    // geocoding API. That round-trip is what caused mismatches —
+                    // e.g. Nominatim returning a district name like "Thanet" that
+                    // doesn't exist as a city in Open-Meteo's data, which then
+                    // matched an unrelated same-named place elsewhere in the world.
+                    const place = {
+                        latitude: lat,
+                        longitude: lon,
+                        name: city,
+                        country: country,
+                        admin1: admin1,
+                        timezone: null // resolved from the forecast response instead
+                    };
+
+                    loadWeatherForPlace(place, requestId);
                 })
                 .catch(err => {
                     console.error(err);
